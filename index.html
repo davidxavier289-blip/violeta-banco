@@ -1,0 +1,515 @@
+<!DOCTYPE html>
+
+<html lang="pt-BR">
+
+<head>
+
+<meta charset="UTF-8">
+
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<title>Violeta - Banco Virtual</title>
+
+<style>
+
+*{box-sizing:border-box}
+
+body{margin:0;background:#f4f2fa;color:#242033;font-family:Arial,sans-serif}
+
+header{background:#6429c6;color:white;padding:24px}
+
+header h1{margin:0;font-size:28px}
+
+header p{margin:7px 0 0;opacity:.8}
+
+main{max-width:1000px;margin:auto;padding:18px}
+
+.card{background:white;border-radius:17px;padding:19px;margin-bottom:16px;box-shadow:0 3px 15px #20104412}
+
+h2{font-size:19px;margin-top:0}
+
+.saldos{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+
+.saldo{background:#eee7fc;padding:17px;border-radius:13px}
+
+.saldo small{color:#625777}
+
+.saldo strong{display:block;font-size:23px;margin-top:8px}
+
+input,select,button{padding:12px;border-radius:9px;border:1px solid #ddd;font-size:15px;width:100%;margin:5px 0}
+
+button{background:#682dc7;color:white;border:0;font-weight:bold;cursor:pointer}
+
+button.sec{background:#eee7fc;color:#5421a5}
+
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:10px}
+
+.item{border:1px solid #eee;border-radius:12px;padding:12px}
+
+.item strong{display:block;margin-bottom:6px}
+
+.item button{margin-top:9px}
+
+.history{font-size:14px;border-bottom:1px solid #eee;padding:10px 0}
+
+.green{color:#16834c}.red{color:#c03939}
+
+.notice{font-size:12px;color:#777;text-align:center;margin:20px}
+
+</style>
+
+</head>
+
+<body>
+
+<header>
+
+  <h1>VIOLETA</h1>
+
+  <p>Seu banco virtual fictício</p>
+
+</header>
+
+<main>
+
+<section class="card">
+
+  <h2>Suas carteiras</h2>
+
+  <div class="saldos">
+
+    <div class="saldo">
+
+      <small>Saldo em reais</small>
+
+      <strong id="brl">R$ 0,00</strong>
+
+    </div>
+
+    <div class="saldo">
+
+      <small>Saldo em dólares</small>
+
+      <strong id="usd">US$ 0.00</strong>
+
+    </div>
+
+  </div>
+
+</section>
+
+<section class="card">
+
+  <h2>Administrar saldo</h2>
+
+  <select id="moeda">
+
+    <option value="BRL">Reais (R$)</option>
+
+    <option value="USD">Dólares (US$)</option>
+
+  </select>
+
+  <input id="valor" type="number" min="0" step="0.01" placeholder="Digite um valor">
+
+  <div class="grid">
+
+    <button onclick="alterarSaldo(1)">Adicionar dinheiro</button>
+
+    <button class="sec" onclick="alterarSaldo(-1)">Retirar dinheiro</button>
+
+  </div>
+
+</section>
+
+<section class="card">
+
+  <h2>Conversor de moedas</h2>
+
+  <label>Cotação fictícia: 1 dólar vale R$</label>
+
+  <input id="cotacao" type="number" min="0.01" step="0.01" value="5.50">
+
+  <input id="conversao" type="number" min="0.01" step="0.01" placeholder="Valor para converter">
+
+  <select id="direcao">
+
+    <option value="BRLUSD">Converter reais para dólares</option>
+
+    <option value="USDBRL">Converter dólares para reais</option>
+
+  </select>
+
+  <button onclick="converter()">Converter</button>
+
+</section>
+
+<section class="card">
+
+  <h2>Loja de compras</h2>
+
+  <div class="grid" id="loja"></div>
+
+</section>
+
+<section class="card">
+
+  <h2>Suas empresas</h2>
+
+  <p>Compre empresas fictícias e receba lucros simulados.</p>
+
+  <div class="grid" id="empresas"></div>
+
+</section>
+
+<section class="card">
+
+  <h2>Investimentos fictícios</h2>
+
+  <div class="grid" id="investimentos"></div>
+
+</section>
+
+<section class="card">
+
+  <h2>Histórico de movimentações</h2>
+
+  <div id="historico">Nenhuma movimentação ainda.</div>
+
+  <button class="sec" onclick="limparHistorico()">Limpar histórico</button>
+
+</section>
+
+<section class="card">
+
+  <h2>Salvar seus dados</h2>
+
+  <button onclick="exportar()">Baixar backup dos dados</button>
+
+  <button class="sec" onclick="resetar()">Reiniciar banco virtual</button>
+
+</section>
+
+<p class="notice">Violeta é uma simulação fictícia. Não movimenta dinheiro real e não é um banco de verdade.</p>
+
+</main>
+
+<script>
+
+const produtos=[
+
+ ["Carro esportivo",250000,"BRL"],
+
+ ["Mansão",3500000,"BRL"],
+
+ ["Apartamento",650000,"BRL"],
+
+ ["Iate",1200000,"BRL"],
+
+ ["Celular premium",1200,"USD"],
+
+ ["Computador gamer",2500,"USD"],
+
+ ["Avião particular",850000,"USD"],
+
+ ["Relógio de luxo",15000,"USD"]
+
+];
+
+const negocios=[
+
+ ["Cafeteria",5000,350],
+
+ ["Restaurante",25000,1500],
+
+ ["Loja de roupas",40000,2500],
+
+ ["Supermercado",150000,9000],
+
+ ["Hotel",500000,30000],
+
+ ["Shopping",2000000,120000]
+
+];
+
+const aplicacoes=[
+
+ ["Investimento básico",100,1.02],
+
+ ["Investimento médio",1000,1.05],
+
+ ["Investimento avançado",10000,1.10]
+
+];
+
+let dados=JSON.parse(localStorage.getItem("violetaDados"))||{
+
+ brl:10000,usd:1000,comprados:[],empresas:[],investimentos:[],historico:[]
+
+};
+
+function salvar(){
+
+ localStorage.setItem("violetaDados",JSON.stringify(dados));
+
+ atualizar();
+
+}
+
+function dinheiro(v,m){
+
+ return m==="BRL"
+
+ ? v.toLocaleString("pt-BR",{style:"currency",currency:"BRL"})
+
+ : v.toLocaleString("en-US",{style:"currency",currency:"USD"});
+
+}
+
+function registrar(texto){
+
+ dados.historico.unshift(texto+" — "+new Date().toLocaleString("pt-BR"));
+
+ dados.historico=dados.historico.slice(0,60);
+
+}
+
+function alterarSaldo(tipo){
+
+ let v=Number(document.getElementById("valor").value);
+
+ let m=document.getElementById("moeda").value;
+
+ if(!v||v<=0)return alert("Digite um valor válido.");
+
+ if(tipo<0&&dados[m.toLowerCase()]<v)return alert("Saldo insuficiente.");
+
+ dados[m.toLowerCase()]+=v*tipo;
+
+ registrar((tipo>0?"Adição de ":"Retirada de ")+dinheiro(v,m));
+
+ salvar();
+
+}
+
+function converter(){
+
+ let v=Number(document.getElementById("conversao").value);
+
+ let c=Number(document.getElementById("cotacao").value);
+
+ let d=document.getElementById("direcao").value;
+
+ if(!v||v<=0||!c||c<=0)return alert("Confira os valores.");
+
+ if(d==="BRLUSD"){
+
+  if(dados.brl<v)return alert("Saldo em reais insuficiente.");
+
+  dados.brl-=v;dados.usd+=v/c;
+
+ }else{
+
+  if(dados.usd<v)return alert("Saldo em dólares insuficiente.");
+
+  dados.usd-=v;dados.brl+=v*c;
+
+ }
+
+ registrar("Conversão de moedas");
+
+ salvar();
+
+}
+
+function comprar(i){
+
+ let p=produtos[i], chave=p[2].toLowerCase();
+
+ if(dados[chave]<p[1])return alert("Saldo insuficiente.");
+
+ dados[chave]-=p[1];
+
+ dados.comprados.push(p[0]);
+
+ registrar("Compra: "+p[0]);
+
+ salvar();
+
+}
+
+function comprarEmpresa(i){
+
+ let e=negocios[i];
+
+ if(dados.brl<e[1])return alert("Saldo em reais insuficiente.");
+
+ dados.brl-=e[1];
+
+ dados.empresas.push({nome:e[0],lucro:e[2]});
+
+ registrar("Compra da empresa: "+e[0]);
+
+ salvar();
+
+}
+
+function receberLucros(){
+
+ if(!dados.empresas.length)return alert("Você ainda não possui empresas.");
+
+ let total=dados.empresas.reduce((s,e)=>s+e.lucro,0);
+
+ dados.brl+=total;
+
+ registrar("Lucros recebidos: "+dinheiro(total,"BRL"));
+
+ salvar();
+
+}
+
+function investir(i){
+
+ let a=aplicacoes[i];
+
+ if(dados.brl<a[1])return alert("Saldo insuficiente.");
+
+ dados.brl-=a[1];
+
+ dados.investimentos.push({nome:a[0],valor:a[1],retorno:a[1]*a[2]});
+
+ registrar("Aplicação: "+a[0]);
+
+ salvar();
+
+}
+
+function resgatarInvestimentos(){
+
+ if(!dados.investimentos.length)return alert("Você não tem investimentos.");
+
+ let total=dados.investimentos.reduce((s,a)=>s+a.retorno,0);
+
+ dados.brl+=total;
+
+ dados.investimentos=[];
+
+ registrar("Resgate de investimentos: "+dinheiro(total,"BRL"));
+
+ salvar();
+
+}
+
+function atualizar(){
+
+ document.getElementById("brl").textContent=dinheiro(dados.brl,"BRL");
+
+ document.getElementById("usd").textContent=dinheiro(dados.usd,"USD");
+
+ document.getElementById("loja").innerHTML=produtos.map((p,i)=>`
+
+ <div class="item">
+
+ <strong>${p[0]}</strong>
+
+ ${dinheiro(p[1],p[2])}
+
+ <button onclick="comprar(${i})">Comprar</button>
+
+ </div>`).join("");
+
+ document.getElementById("empresas").innerHTML=
+
+ negocios.map((e,i)=>`
+
+ <div class="item">
+
+ <strong>${e[0]}</strong>
+
+ Preço: ${dinheiro(e[1],"BRL")}<br>
+
+ Lucro simulado: ${dinheiro(e[2],"BRL")}
+
+ <button onclick="comprarEmpresa(${i})">Comprar empresa</button>
+
+ </div>`).join("")+
+
+ `<button onclick="receberLucros()">Receber lucros das empresas</button>`;
+
+ document.getElementById("investimentos").innerHTML=
+
+ aplicacoes.map((a,i)=>`
+
+ <div class="item">
+
+ <strong>${a[0]}</strong>
+
+ Aplicação: ${dinheiro(a[1],"BRL")}<br>
+
+ Retorno fictício: ${dinheiro(a[1]*a[2],"BRL")}
+
+ <button onclick="investir(${i})">Investir</button>
+
+ </div>`).join("")+
+
+ `<button onclick="resgatarInvestimentos()">Resgatar investimentos</button>`;
+
+ document.getElementById("historico").innerHTML=
+
+ dados.historico.length
+
+ ?dados.historico.map(h=>`<div class="history">${h}</div>`).join("")
+
+ :"Nenhuma movimentação ainda.";
+
+}
+
+function limparHistorico(){
+
+ if(confirm("Apagar o histórico?")){
+
+  dados.historico=[];
+
+  salvar();
+
+ }
+
+}
+
+function resetar(){
+
+ if(confirm("Tem certeza que deseja reiniciar tudo?")){
+
+  localStorage.removeItem("violetaDados");
+
+  dados={brl:10000,usd:1000,comprados:[],empresas:[],investimentos:[],historico:[]};
+
+  salvar();
+
+ }
+
+}
+
+function exportar(){
+
+ let blob=new Blob([JSON.stringify(dados,null,2)],{type:"application/json"});
+
+ let a=document.createElement("a");
+
+ a.href=URL.createObjectURL(blob);
+
+ a.download="violeta-backup.json";
+
+ a.click();
+
+ URL.revokeObjectURL(a.href);
+
+}
+
+atualizar();
+
+</script>
+
+</body>
+
+</html>
